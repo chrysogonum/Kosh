@@ -75,11 +75,18 @@
             z-index: 1001;
         }
 
-        @media (max-width: 900px), (pointer: coarse) {
+        /* Always show controls for testing - can be limited to mobile later */
+        #mobile-controls {
+            display: flex !important;
+        }
+
+        /* Uncomment to hide on desktop:
+        @media (min-width: 901px) and (pointer: fine) {
             #mobile-controls {
-                display: flex;
+                display: none !important;
             }
         }
+        */
 
         .control-group {
             display: flex;
@@ -166,44 +173,31 @@
         function pressVirtualKey(key) {
             // Set the virtual key press for Kaboom to consume
             if (window.koshInput) {
-                window.koshInput.virtualPress = key;
+                window.koshInput.setPress(key);
             }
         }
 
-        document.getElementById('btn-up')?.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            pressVirtualKey('up');
-        });
+        // Helper to add both touch and click events
+        function addButtonHandler(id, key) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
 
-        document.getElementById('btn-down')?.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            pressVirtualKey('down');
-        });
+            const handler = (e) => {
+                e.preventDefault();
+                pressVirtualKey(key);
+            };
 
-        document.getElementById('btn-left')?.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            pressVirtualKey('left');
-        });
+            btn.addEventListener('touchstart', handler);
+            btn.addEventListener('click', handler);
+        }
 
-        document.getElementById('btn-right')?.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            pressVirtualKey('right');
-        });
-
-        document.getElementById('btn-a')?.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            pressVirtualKey('enter');
-        });
-
-        document.getElementById('btn-b')?.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            pressVirtualKey('escape');
-        });
-
-        document.getElementById('btn-space')?.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            pressVirtualKey('space');
-        });
+        addButtonHandler('btn-up', 'up');
+        addButtonHandler('btn-down', 'down');
+        addButtonHandler('btn-left', 'left');
+        addButtonHandler('btn-right', 'right');
+        addButtonHandler('btn-a', 'enter');
+        addButtonHandler('btn-b', 'escape');
+        addButtonHandler('btn-space', 'space');
     </script>
 </body>
 </html>

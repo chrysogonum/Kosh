@@ -11,10 +11,20 @@ kaboom({
 // Virtual button state for mobile touch controls
 window.koshInput = {
     virtualPress: null, // Stores the last virtual key press
-    consumePress() {
-        const key = this.virtualPress;
+    pressHandled: false,
+
+    setPress(key) {
+        this.virtualPress = key;
+        this.pressHandled = false;
+    },
+
+    getPress() {
+        return this.virtualPress;
+    },
+
+    clearPress() {
         this.virtualPress = null;
-        return key;
+        this.pressHandled = false;
     }
 };
 
@@ -109,16 +119,30 @@ function getBobOffset(speed = 3, amplitude = 3) {
     return Math.sin(time() * speed) * amplitude;
 }
 
+// Global update loop to handle virtual key presses
+let lastVirtualPress = null;
+onUpdate(() => {
+    const currentPress = window.koshInput.getPress();
+    // Only trigger if this is a new press (different from last frame)
+    if (currentPress && currentPress !== lastVirtualPress) {
+        lastVirtualPress = currentPress;
+        // Clear the press so it's only triggered once
+        window.koshInput.clearPress();
+    } else if (!currentPress) {
+        lastVirtualPress = null;
+    }
+});
+
 // Enhanced key press handler that works with both keyboard and touch
 function onAnyKeyPress(key, callback) {
     // Listen for keyboard input
-    onAnyKeyPress(key, callback);
+    onKeyPress(key, callback);
 
     // Check for virtual input every frame
     onUpdate(() => {
-        const virtualKey = window.koshInput.consumePress();
-        if (virtualKey === key) {
+        if (lastVirtualPress === key) {
             callback();
+            lastVirtualPress = null; // Consume it
         }
     });
 }
