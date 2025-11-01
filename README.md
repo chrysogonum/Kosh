@@ -5,9 +5,7 @@ A Pokemon-style quest game featuring a little black cat named Kosh!
 ![Game Screenshot](https://img.shields.io/badge/made%20with-Kaboom.js-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## 🎮 [Play the Game!](https://YOUR_USERNAME.github.io/kosh/)
-
-> **Note:** After deployment, update the URL above with your actual GitHub Pages link
+## 🎮 [Play the Game!](https://chrysogonum.github.io/kosh/)
 
 ## 📖 Story
 
@@ -46,7 +44,7 @@ Check if new food has magically appeared in the bowl!
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/kosh.git
+git clone https://github.com/chrysogonum/kosh.git
 cd kosh
 
 # Start a local server
