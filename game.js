@@ -5,7 +5,6 @@ kaboom({
     width: 800,
     height: 600,
     scale: 1,
-    canvas: document.querySelector('#game-container'),
     background: [20, 20, 30],
 });
 
