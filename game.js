@@ -58,6 +58,7 @@ const gameState = {
         energy: CONFIG.player.startingEnergy,
         maxEnergy: CONFIG.player.maxEnergy,
         completedQuests: new Set(),
+        easterEggFound: false,
     },
     currentQuest: null,
 };
@@ -184,6 +185,7 @@ scene('mainMenu', () => {
                 const data = JSON.parse(saved);
                 gameState.player.energy = data.energy;
                 gameState.player.completedQuests = new Set(data.completedQuests);
+                gameState.player.easterEggFound = data.easterEggFound || false;
                 go('overworld');
             }
         } else if (choice === 'Quit') {
@@ -221,6 +223,15 @@ scene('overworld', () => {
             menuOptions.push('Start: In and Out');
         } else {
             menuOptions.push('[DONE] In and Out');
+        }
+
+        // Secret quest (only appears if easter egg found)
+        if (gameState.player.easterEggFound) {
+            if (!gameState.player.completedQuests.has('witch_in_wardrobe')) {
+                menuOptions.push('🥚 Start: Witch in the Wardrobe');
+            } else {
+                menuOptions.push('🥚 [DONE] Witch in the Wardrobe');
+            }
         }
 
         menuOptions.push('Save Game');
@@ -304,11 +315,14 @@ scene('overworld', () => {
             go('daWire');
         } else if (choice === 'Start: In and Out') {
             go('inAndOut');
+        } else if (choice === '🥚 Start: Witch in the Wardrobe') {
+            go('witchInWardrobe');
         } else if (choice === 'Save Game') {
             // Save to localStorage
             const saveData = {
                 energy: gameState.player.energy,
                 completedQuests: Array.from(gameState.player.completedQuests),
+                easterEggFound: gameState.player.easterEggFound,
             };
             localStorage.setItem('koshSave', JSON.stringify(saveData));
             debug.log('Game saved!');
@@ -330,6 +344,21 @@ scene('windowWitch', () => {
     let resultMessage = '';
     let targetDad = 1;
     let koshAction = null;
+
+    // Easter egg mechanics
+    const easterEggSpawnChance = 0.20; // 20% chance to spawn
+    let easterEggVisible = false;
+    let easterEggX = 0;
+    let easterEggY = 0;
+    let easterEggBob = 0; // For floating animation
+
+    // Only spawn if not already found
+    if (!gameState.player.easterEggFound && rand() < easterEggSpawnChance) {
+        easterEggVisible = true;
+        // Position near the window but not blocking view
+        easterEggX = 600 + rand(-30, 30);
+        easterEggY = 150 + rand(-20, 20);
+    }
 
     const tactics = Object.entries(CONFIG.windowWitch.tactics).map(([key, data]) => ({
         key,
@@ -438,6 +467,11 @@ scene('windowWitch', () => {
         // Add Zzz for sleeping dads
         if (!dad1Awake) addZzz(145, 190);
         if (!dad2Awake) addZzz(595, 190);
+
+        // Easter egg bobbing animation
+        if (easterEggVisible) {
+            easterEggBob += dt() * 2;
+        }
     });
 
     onDraw(() => {
@@ -476,6 +510,41 @@ scene('windowWitch', () => {
             pos: vec2(320, 80),
             scale: 2,
         });
+
+        // Easter egg (if visible)
+        if (easterEggVisible) {
+            const bobOffset = Math.sin(easterEggBob) * 8;
+            const eggPosY = easterEggY + bobOffset;
+
+            // Sparkle glow around egg
+            for (let ox = -2; ox <= 2; ox++) {
+                for (let oy = -2; oy <= 2; oy++) {
+                    if (ox === 0 && oy === 0) continue;
+                    drawSprite({
+                        sprite: 'easter_egg',
+                        pos: vec2(easterEggX + ox, eggPosY + oy),
+                        scale: 1.5,
+                        anchor: 'center',
+                        opacity: 0.2,
+                        color: rgb(255, 220, 255),
+                    });
+                }
+            }
+
+            drawSprite({
+                sprite: 'easter_egg',
+                pos: vec2(easterEggX, eggPosY),
+                scale: 1.5,
+                anchor: 'center',
+            });
+
+            // Subtle hint text above egg
+            drawTextShadow('???', easterEggX, eggPosY - 40, {
+                size: 16,
+                align: 'center',
+                color: rgb(255, 200, 255),
+            });
+        }
 
         // Kosh with glow
         const koshX = 380;
@@ -649,6 +718,35 @@ scene('windowWitch', () => {
 
     onKeyPress('escape', () => {
         go('overworld');
+    });
+
+    // Mouse click handler for easter egg
+    onClick(() => {
+        if (easterEggVisible) {
+            const mouse = mousePos();
+            const bobOffset = Math.sin(easterEggBob) * 8;
+            const eggPosY = easterEggY + bobOffset;
+
+            // Check if click is near egg (generous hitbox)
+            const dist = Math.sqrt(
+                Math.pow(mouse.x - easterEggX, 2) +
+                Math.pow(mouse.y - eggPosY, 2)
+            );
+
+            if (dist < 50) {
+                // Egg caught!
+                easterEggVisible = false;
+                gameState.player.easterEggFound = true;
+
+                // Big sparkle effect
+                for (let i = 0; i < 30; i++) {
+                    addSparkles(easterEggX, eggPosY, 3, [255, 200, 255]);
+                }
+
+                resultMessage = '🥚 You found a secret easter egg! A mysterious wardrobe has appeared in the overworld...';
+                showResult = true;
+            }
+        }
     });
 });
 
@@ -1255,6 +1353,211 @@ scene('inAndOut', () => {
             // Give up
             resultMessage = `Gave up after ${trips} trips. Maybe there will be food next time?`;
             showResult = true;
+        }
+    });
+
+    onKeyPress('escape', () => {
+        go('overworld');
+    });
+});
+
+// ===========================
+// WITCH IN THE WARDROBE SCENE (Secret Quest!)
+// ===========================
+scene('witchInWardrobe', () => {
+    let round = 1;
+    const maxRounds = 10;
+    let catchCount = 0;
+    const targetCatches = 7; // Need to catch 7/10
+
+    // Peek-a-boo state
+    let phase = 'waiting'; // 'waiting', 'peeking', 'result'
+    let raccoonVisible = false;
+    let raccoonX = 0;
+    let raccoonY = 0;
+    let peekTimer = 0;
+    let peekDuration = 0;
+    let waitTimer = 0;
+    let waitDuration = 0;
+    let resultMessage = '';
+    let showResult = false;
+
+    // Kosh position
+    const koshX = 200;
+    const koshY = 400;
+
+    // Wardrobe zones where raccoon can peek
+    const peekPositions = [
+        { x: 520, y: 180, label: 'top-left' },
+        { x: 600, y: 180, label: 'top-right' },
+        { x: 520, y: 280, label: 'mid-left' },
+        { x: 600, y: 280, label: 'mid-right' },
+        { x: 560, y: 380, label: 'bottom' },
+    ];
+
+    function startWait() {
+        phase = 'waiting';
+        waitTimer = 0;
+        waitDuration = rand(0.8, 1.5); // Wait 0.8-1.5 seconds
+    }
+
+    function startPeek() {
+        phase = 'peeking';
+        raccoonVisible = true;
+        peekTimer = 0;
+        peekDuration = rand(0.6, 1.2); // Peek for 0.6-1.2 seconds
+
+        // Choose random position
+        const pos = choose(peekPositions);
+        raccoonX = pos.x;
+        raccoonY = pos.y;
+    }
+
+    function endPeek(caught) {
+        raccoonVisible = false;
+
+        if (caught) {
+            catchCount++;
+            resultMessage = `Caught! (${catchCount}/${maxRounds})`;
+        } else {
+            resultMessage = `Missed! (${catchCount}/${maxRounds})`;
+        }
+
+        showResult = true;
+
+        wait(0.8, () => {
+            showResult = false;
+            round++;
+
+            if (round > maxRounds) {
+                // Game over
+                if (catchCount >= targetCatches) {
+                    gameState.player.completedQuests.add('witch_in_wardrobe');
+                    go('questComplete', { questName: 'Witch in the Wardrobe' });
+                } else {
+                    go('overworld');
+                }
+            } else {
+                startWait();
+            }
+        });
+    }
+
+    // Start first round
+    startWait();
+
+    onUpdate(() => {
+        if (phase === 'waiting') {
+            waitTimer += dt();
+            if (waitTimer >= waitDuration) {
+                startPeek();
+            }
+        } else if (phase === 'peeking') {
+            peekTimer += dt();
+            if (peekTimer >= peekDuration) {
+                // Raccoon disappears without being caught
+                endPeek(false);
+            }
+        }
+    });
+
+    onDraw(() => {
+        // Background
+        drawRect({
+            pos: vec2(0, 0),
+            width: width(),
+            height: height(),
+            color: rgb(70, 60, 90),
+        });
+
+        // Title
+        drawTextShadow('WITCH IN THE WARDROBE', width() / 2, 30, {
+            size: 28,
+            align: 'center',
+            color: rgb(255, 200, 255),
+        });
+
+        // Round counter
+        drawTextShadow(`Round: ${round}/${maxRounds}`, 50, 60, {
+            size: 20,
+            color: rgb(255, 220, 80),
+        });
+
+        drawTextShadow(`Caught: ${catchCount}/${targetCatches}`, width() - 200, 60, {
+            size: 20,
+            color: catchCount >= targetCatches ? rgb(50, 255, 100) : rgb(255, 255, 255),
+        });
+
+        // Wardrobe
+        drawSprite({
+            sprite: 'wardrobe',
+            pos: vec2(420, 150),
+            scale: 2,
+        });
+
+        // Raccoon peeking
+        if (raccoonVisible) {
+            drawSprite({
+                sprite: 'raccoon_toy',
+                pos: vec2(raccoonX, raccoonY),
+                scale: 1.8,
+                anchor: 'center',
+            });
+        }
+
+        // Kosh watching
+        drawSprite({
+            sprite: 'kosh_idle',
+            pos: vec2(koshX, koshY),
+            scale: 2.5,
+            anchor: 'center',
+        });
+
+        // Instructions
+        if (phase === 'waiting') {
+            drawTextShadow('Get ready...', width() / 2, 500, {
+                size: 24,
+                align: 'center',
+                color: rgb(255, 200, 100),
+            });
+        } else if (phase === 'peeking') {
+            drawTextShadow('Click the raccoon!', width() / 2, 500, {
+                size: 24,
+                align: 'center',
+                color: rgb(255, 100, 100),
+            });
+        }
+
+        // Result message
+        if (showResult) {
+            drawTextShadow(resultMessage, width() / 2, 450, {
+                size: 28,
+                align: 'center',
+                color: catchCount > 0 && resultMessage.includes('Caught') ? rgb(50, 255, 100) : rgb(255, 150, 150),
+            });
+        }
+
+        // Bottom instructions
+        drawTextShadow('Click the raccoon when it peeks!  ESC: exit', width() / 2, height() - 20, {
+            size: 16,
+            align: 'center',
+        });
+    });
+
+    onClick(() => {
+        if (raccoonVisible && phase === 'peeking') {
+            const mouse = mousePos();
+
+            // Check if click is near raccoon (generous hitbox)
+            const dist = Math.sqrt(
+                Math.pow(mouse.x - raccoonX, 2) +
+                Math.pow(mouse.y - raccoonY, 2)
+            );
+
+            if (dist < 40) {
+                // Caught!
+                endPeek(true);
+            }
         }
     });
 

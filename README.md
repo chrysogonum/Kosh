@@ -38,6 +38,18 @@ Check if new food has magically appeared in the bowl!
 - ⚡ **Risk vs Reward** - Keep checking or conserve energy?
 - 🎯 **Win Condition** - Find the food before running out of energy!
 
+### Secret Quest: 🥚 Witch in the Wardrobe
+*Can you find the hidden easter egg?*
+
+There's a secret quest hidden in the game! Look for a mysterious easter egg during your adventures...
+
+**Mechanics:**
+- 🔍 **Hidden Discovery** - Find the secret easter egg to unlock this quest
+- 🎯 **Peek-a-boo Challenge** - Click the raccoon toy when it peeks out
+- ⏱️ **Quick Reflexes** - The raccoon appears at random times and positions
+- 📊 **Score Tracking** - Catch 7 out of 10 peeks to win
+- 🎁 **Secret Reward** - A special achievement for the curious!
+
 ## ✨ Features
 
 - 🎨 **Retro pixel art** - Hand-crafted sprites with glow effects
@@ -46,6 +58,7 @@ Check if new food has magically appeared in the bowl!
 - 💾 **Auto-save** - Progress saved to browser storage
 - 🎵 **Turn-based gameplay** - Strategic energy management
 - 🌟 **Quest tracking** - See your completion percentage
+- 🥚 **Secret easter egg** - Hidden quest to discover!
 
 ## 🕹️ Controls
 
