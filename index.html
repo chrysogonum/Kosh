@@ -61,6 +61,74 @@
             background: var(--good);
             margin-left: 8px;
         }
+
+        /* Mobile Controls */
+        #mobile-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: none;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        @media (max-width: 900px), (pointer: coarse) {
+            #mobile-controls {
+                display: flex;
+            }
+        }
+
+        .control-group {
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: 50px 50px 50px;
+            grid-template-rows: 50px 50px 50px;
+            gap: 4px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border: 3px solid var(--accent-2);
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 20px;
+            color: var(--ink);
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,.1);
+            transition: all 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+            background: var(--accent-2);
+        }
+
+        .btn-up { grid-column: 2; grid-row: 1; }
+        .btn-down { grid-column: 2; grid-row: 3; }
+        .btn-left { grid-column: 1; grid-row: 2; }
+        .btn-right { grid-column: 3; grid-row: 2; }
+
+        .btn-action {
+            width: 60px;
+            height: 60px;
+        }
+
+        .btn-a { background: rgba(255, 154, 194, 0.9); }
+        .btn-b { background: rgba(179, 226, 255, 0.9); }
+        .btn-space { background: rgba(255, 220, 150, 0.9); }
     </style>
 </head>
 <body>
@@ -72,5 +140,67 @@
         <script src="https://unpkg.com/kaboom@3000.0.1/dist/kaboom.js"></script>
         <script src="game.js" type="module"></script>
     </div>
+
+    <!-- Mobile Touch Controls -->
+    <div id="mobile-controls">
+        <!-- D-Pad -->
+        <div class="control-group">
+            <div class="dpad">
+                <div class="btn btn-up" id="btn-up">↑</div>
+                <div class="btn btn-left" id="btn-left">←</div>
+                <div class="btn btn-right" id="btn-right">→</div>
+                <div class="btn btn-down" id="btn-down">↓</div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="control-group">
+            <div class="btn btn-action btn-space" id="btn-space">␣</div>
+            <div class="btn btn-action btn-b" id="btn-b">B</div>
+            <div class="btn btn-action btn-a" id="btn-a">A</div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile control bindings
+        function simulateKey(key) {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
+        }
+
+        document.getElementById('btn-up')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            simulateKey('ArrowUp');
+        });
+
+        document.getElementById('btn-down')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            simulateKey('ArrowDown');
+        });
+
+        document.getElementById('btn-left')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            simulateKey('ArrowLeft');
+        });
+
+        document.getElementById('btn-right')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            simulateKey('ArrowRight');
+        });
+
+        document.getElementById('btn-a')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            simulateKey('Enter');
+        });
+
+        document.getElementById('btn-b')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            simulateKey('Escape');
+        });
+
+        document.getElementById('btn-space')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            simulateKey(' ');
+        });
+    </script>
 </body>
 </html>

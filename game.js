@@ -63,6 +63,52 @@ function drawHearts(cur, max) {
     }
 }
 
+// Kawaii pill-shaped button
+function uiPill(text, y, { selected = false, centered = true } = {}) {
+    const padX = 14;
+    const padY = 6;
+    const textSize = 20;
+    const w = text.length * 12 + padX * 2;
+    const h = 34;
+    const r = 12;
+    const x = centered ? width() / 2 - w / 2 : padX;
+
+    // Pill background
+    drawRect({
+        width: w,
+        height: h,
+        pos: vec2(x, y),
+        radius: r,
+        color: selected ? rgb(255, 154, 194) : rgb(255, 255, 255),
+        outline: { color: selected ? rgb(200, 100, 150) : rgb(179, 226, 255), width: 3 },
+    });
+
+    // Text
+    drawText({
+        text,
+        size: textSize,
+        pos: vec2(x + padX, y + padY + 2),
+        color: selected ? rgb(80, 36, 62) : rgb(75, 63, 78),
+    });
+
+    return { x, y, w, h }; // Return bounds for click detection if needed
+}
+
+// Get idle bob offset (gentle sine wave)
+function getBobOffset(speed = 3, amplitude = 3) {
+    return Math.sin(time() * speed) * amplitude;
+}
+
+// Apply entrance tween to a game object
+function applyEntranceTween(obj, startScale = 0.8, duration = 0.3) {
+    if (obj.scale) {
+        obj.scale = vec2(startScale);
+        tween(startScale, 1, duration, (v) => {
+            obj.scale = vec2(v);
+        }, easings.easeOutBack);
+    }
+}
+
 // Game configuration
 const CONFIG = {
     player: {
@@ -134,14 +180,9 @@ function drawMenu(title, options, selectedIndex, y = 250) {
         });
     }
 
+    // Draw kawaii pill buttons for each option
     options.forEach((option, i) => {
-        const prefix = i === selectedIndex ? '> ' : '  ';
-        const color = i === selectedIndex ? rgb(255, 200, 50) : rgb(255, 255, 255);
-
-        drawTextShadow(prefix + option, width() / 2 - 150, y + i * 40, {
-            size: 24,
-            color: color,
-        });
+        uiPill(option, y + i * 44, { selected: i === selectedIndex });
     });
 }
 
@@ -310,9 +351,9 @@ scene('overworld', () => {
             size: 18,
         });
 
-        // Draw Kosh with glow effect
+        // Draw Kosh with glow effect and idle bob
         const koshX = 150;
-        const koshY = 400;
+        const koshY = 400 + getBobOffset(3, 3); // Kawaii gentle bob!
 
         // Glow
         for (let ox = -1; ox <= 1; ox++) {
