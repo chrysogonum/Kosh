@@ -654,14 +654,14 @@ scene('daWire', () => {
 
     // Wire swing state
     let wirePosition = 0; // -1 to 1
-    let wireSpeed = 2;
+    let wireSpeed = 1.3; // Slower swing (was 2)
     let wireDirection = 1;
 
     // Game state
     let phase = 'watch'; // 'watch', 'lick', 'grip', 'result'
     let lickSuccess = false;
     let gripProgress = 0;
-    let gripTarget = 0.6; // How long to hold
+    let gripTarget = 0.4; // Shorter hold time (was 0.6)
     let resultMessage = '';
     let showResult = false;
 
@@ -671,9 +671,9 @@ scene('daWire', () => {
     const lickWindow = 0.3; // 300ms timing window
     const gripDuration = 1500; // 1.5 seconds to hold
 
-    // Difficulty increases each round
+    // Difficulty increases each round (gentler progression)
     function getDifficulty() {
-        return 1 + (round - 1) * 0.15; // Gets 15% harder each round
+        return 1 + (round - 1) * 0.08; // Gets 8% harder each round (was 15%)
     }
 
     onUpdate(() => {
@@ -825,9 +825,9 @@ scene('daWire', () => {
             instructions = 'Press SPACE when the string is in the CENTER!';
             instructionColor = rgb(255, 200, 50);
 
-            // Show target zone
+            // Show target zone (bigger = easier)
             const targetX = width() / 2;
-            const zoneWidth = 60;
+            const zoneWidth = 90; // Wider zone (was 60)
             drawRect({
                 pos: vec2(targetX - zoneWidth/2, 240),
                 width: zoneWidth,
@@ -886,8 +886,8 @@ scene('daWire', () => {
         if (showResult) return;
 
         if (phase === 'lick') {
-            // Check if string is in center (timing check)
-            if (Math.abs(wirePosition) < 0.25) {
+            // Check if string is in center (timing check) - more forgiving window
+            if (Math.abs(wirePosition) < 0.35) {
                 // Success!
                 lickSuccess = true;
                 phase = 'grip';
@@ -920,8 +920,8 @@ scene('daWire', () => {
 
             // Check if quest is complete
             if (round > maxRounds) {
-                if (roundsWon >= 3) {
-                    // Success! Won at least 3 out of 5 rounds
+                if (roundsWon >= 2) {
+                    // Success! Won at least 2 out of 5 rounds (easier win condition)
                     gameState.player.completedQuests.add('da_wire');
                     go('questComplete', { questName: 'Da Wire' });
                 } else {
@@ -929,7 +929,7 @@ scene('daWire', () => {
                     go('questComplete', {
                         questName: 'Da Wire',
                         failed: true,
-                        message: `Only got ${roundsWon}/5 rounds. Try again!`
+                        message: `Only got ${roundsWon}/5 rounds. Need at least 2!`
                     });
                 }
             } else {

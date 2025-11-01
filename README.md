@@ -25,8 +25,8 @@ Master the art of licking the string toy while holding it!
 **Mechanics:**
 - ⏱️ **Timing Challenge** - Press SPACE when the string is in the center
 - 💪 **Grip Challenge** - Hold SPACE to maintain your grip
-- 📈 **Progressive Difficulty** - Gets 15% faster each round
-- 🎯 **Win Condition** - Successfully complete 3 out of 5 rounds
+- 📈 **Progressive Difficulty** - Gets 8% faster each round
+- 🎯 **Win Condition** - Successfully complete 2 out of 5 rounds
 
 ### Quest 3: In and Out (Coming Soon)
 Check if new food has magically appeared in the bowl!
