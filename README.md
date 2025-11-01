@@ -19,8 +19,14 @@ Wake up both dads and convince them to open the window for bird watching!
 - 🐾 **Gentle Paw Taps** - Soft and persistent (70% success, 3 energy)
 - 🌪️ **3 AM Zoomies** - Maximum chaos (80% success, 15 energy)
 
-### Quest 2: Da Wire (Coming Soon)
+### Quest 2: Da Wire ✅
 Master the art of licking the string toy while holding it!
+
+**Mechanics:**
+- ⏱️ **Timing Challenge** - Press SPACE when the string is in the center
+- 💪 **Grip Challenge** - Hold SPACE to maintain your grip
+- 📈 **Progressive Difficulty** - Gets 15% faster each round
+- 🎯 **Win Condition** - Successfully complete 3 out of 5 rounds
 
 ### Quest 3: In and Out (Coming Soon)
 Check if new food has magically appeared in the bowl!

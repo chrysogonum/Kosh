@@ -211,6 +211,12 @@ scene('overworld', () => {
             menuOptions.push('[DONE] Window Witch');
         }
 
+        if (!gameState.player.completedQuests.has('da_wire')) {
+            menuOptions.push('Start: Da Wire');
+        } else {
+            menuOptions.push('[DONE] Da Wire');
+        }
+
         menuOptions.push('Save Game');
         menuOptions.push('Main Menu');
     }
@@ -288,6 +294,8 @@ scene('overworld', () => {
 
         if (choice === 'Start: Window Witch') {
             go('windowWitch');
+        } else if (choice === 'Start: Da Wire') {
+            go('daWire');
         } else if (choice === 'Save Game') {
             // Save to localStorage
             const saveData = {
@@ -627,6 +635,309 @@ scene('windowWitch', () => {
                 tryConvinceWindow();
             } else {
                 tryTactic(tactics[selectedOption]);
+            }
+        }
+    });
+
+    onKeyPress('escape', () => {
+        go('overworld');
+    });
+});
+
+// ===========================
+// DA WIRE QUEST SCENE
+// ===========================
+scene('daWire', () => {
+    let round = 1;
+    const maxRounds = 5;
+    let roundsWon = 0;
+
+    // Wire swing state
+    let wirePosition = 0; // -1 to 1
+    let wireSpeed = 2;
+    let wireDirection = 1;
+
+    // Game state
+    let phase = 'watch'; // 'watch', 'lick', 'grip', 'result'
+    let lickSuccess = false;
+    let gripProgress = 0;
+    let gripTarget = 0.6; // How long to hold
+    let resultMessage = '';
+    let showResult = false;
+
+    // Timing
+    let phaseTimer = 0;
+    const watchDuration = 2000; // Watch the string for 2 seconds
+    const lickWindow = 0.3; // 300ms timing window
+    const gripDuration = 1500; // 1.5 seconds to hold
+
+    // Difficulty increases each round
+    function getDifficulty() {
+        return 1 + (round - 1) * 0.15; // Gets 15% harder each round
+    }
+
+    onUpdate(() => {
+        const dt_sec = dt();
+        phaseTimer += dt_sec * 1000;
+
+        // Update wire swing
+        wirePosition += wireSpeed * wireDirection * dt_sec * getDifficulty();
+        if (wirePosition > 1) {
+            wirePosition = 1;
+            wireDirection = -1;
+        } else if (wirePosition < -1) {
+            wirePosition = -1;
+            wireDirection = 1;
+        }
+
+        // Phase management
+        if (phase === 'watch') {
+            if (phaseTimer > watchDuration) {
+                phase = 'lick';
+                phaseTimer = 0;
+            }
+        } else if (phase === 'grip' && !showResult) {
+            // Automatically holding - increase grip progress
+            gripProgress += dt_sec;
+
+            if (gripProgress >= gripTarget) {
+                // Success!
+                roundsWon++;
+                resultMessage = `Perfect! You held on! (Round ${round}/${maxRounds})`;
+                showResult = true;
+                phaseTimer = 0;
+            }
+        }
+    });
+
+    onDraw(() => {
+        // Background
+        drawRect({
+            pos: vec2(0, 0),
+            width: width(),
+            height: height(),
+            color: rgb(60, 50, 80),
+        });
+
+        // Title
+        drawTextShadow('DA WIRE', width() / 2, 30, {
+            size: 28,
+            align: 'center',
+        });
+
+        // Round indicator
+        drawTextShadow(`Round ${round}/${maxRounds} | Success: ${roundsWon}`, width() / 2, 60, {
+            size: 20,
+            align: 'center',
+            color: rgb(255, 220, 80),
+        });
+
+        // Draw the wire attachment point (ceiling)
+        const wireX = width() / 2;
+        const wireY = 100;
+        drawCircle({
+            pos: vec2(wireX, wireY),
+            radius: 5,
+            color: rgb(100, 100, 100),
+        });
+
+        // Draw the string (swinging)
+        const stringLength = 150;
+        const stringEndX = wireX + wirePosition * 100;
+        const stringEndY = wireY + stringLength;
+
+        drawLine({
+            p1: vec2(wireX, wireY),
+            p2: vec2(stringEndX, stringEndY),
+            width: 3,
+            color: rgb(200, 200, 200),
+        });
+
+        // Draw the toy at the end
+        const toySize = 15;
+        drawCircle({
+            pos: vec2(stringEndX, stringEndY),
+            radius: toySize,
+            color: rgb(255, 100, 150),
+        });
+
+        // Draw Kosh below (with glow)
+        const koshX = width() / 2;
+        const koshY = 350;
+
+        // Determine Kosh sprite based on phase
+        let koshSprite = 'kosh_idle';
+        if (phase === 'lick') {
+            koshSprite = wirePosition > -0.2 && wirePosition < 0.2 ? 'kosh_meow' : 'kosh_idle';
+        } else if (phase === 'grip') {
+            koshSprite = 'kosh_paw_tap';
+        }
+
+        // Glow
+        for (let ox = -1; ox <= 1; ox++) {
+            for (let oy = -1; oy <= 1; oy++) {
+                if (ox === 0 && oy === 0) continue;
+                drawSprite({
+                    sprite: koshSprite,
+                    pos: vec2(koshX + ox, koshY + oy),
+                    scale: 2,
+                    anchor: 'center',
+                    opacity: 0.3,
+                    color: rgb(180, 180, 100),
+                });
+            }
+        }
+
+        drawSprite({
+            sprite: koshSprite,
+            pos: vec2(koshX, koshY),
+            scale: 2,
+            anchor: 'center',
+        });
+
+        // Instructions based on phase
+        let instructions = '';
+        let instructionColor = rgb(255, 255, 255);
+
+        if (showResult) {
+            // Show result
+            const boxX = 100;
+            const boxY = 420;
+            const boxWidth = 600;
+            const boxHeight = 120;
+
+            drawRect({
+                pos: vec2(boxX, boxY),
+                width: boxWidth,
+                height: boxHeight,
+                color: rgb(50, 50, 70),
+            });
+
+            drawText({
+                text: resultMessage + '\n\nPress ENTER to continue',
+                pos: vec2(boxX + 20, boxY + 20),
+                size: 20,
+                width: boxWidth - 40,
+            });
+        } else if (phase === 'watch') {
+            instructions = 'Watch the string swing... Get ready!';
+        } else if (phase === 'lick') {
+            instructions = 'Press SPACE when the string is in the CENTER!';
+            instructionColor = rgb(255, 200, 50);
+
+            // Show target zone
+            const targetX = width() / 2;
+            const zoneWidth = 60;
+            drawRect({
+                pos: vec2(targetX - zoneWidth/2, 240),
+                width: zoneWidth,
+                height: 120,
+                color: rgb(50, 255, 100),
+                opacity: 0.3,
+            });
+        } else if (phase === 'grip') {
+            instructions = 'HOLD SPACE to grip the string!';
+            instructionColor = rgb(50, 255, 100);
+
+            // Show grip progress bar
+            const barX = width() / 2 - 150;
+            const barY = 450;
+            const barWidth = 300;
+            const barHeight = 30;
+
+            drawRect({
+                pos: vec2(barX, barY),
+                width: barWidth,
+                height: barHeight,
+                color: rgb(100, 100, 120),
+            });
+
+            const fillWidth = (gripProgress / gripTarget) * (barWidth - 4);
+            drawRect({
+                pos: vec2(barX + 2, barY + 2),
+                width: fillWidth,
+                height: barHeight - 4,
+                color: rgb(50, 255, 100),
+            });
+
+            drawTextShadow('HOLD!', width() / 2, barY - 20, {
+                size: 24,
+                align: 'center',
+                color: rgb(255, 200, 50),
+            });
+        }
+
+        if (!showResult) {
+            drawTextShadow(instructions, width() / 2, 500, {
+                size: 20,
+                align: 'center',
+                color: instructionColor,
+            });
+        }
+
+        // Controls
+        drawTextShadow('SPACE: Lick/Grip | ESC: Exit', width() / 2, height() - 20, {
+            size: 16,
+            align: 'center',
+        });
+    });
+
+    onKeyPress('space', () => {
+        if (showResult) return;
+
+        if (phase === 'lick') {
+            // Check if string is in center (timing check)
+            if (Math.abs(wirePosition) < 0.25) {
+                // Success!
+                lickSuccess = true;
+                phase = 'grip';
+                gripProgress = 0;
+                phaseTimer = 0;
+            } else {
+                // Failed - missed the timing
+                resultMessage = `Missed! Try again. (Round ${round}/${maxRounds})`;
+                showResult = true;
+                phaseTimer = 0;
+            }
+        }
+    });
+
+    onKeyRelease('space', () => {
+        if (phase === 'grip' && !showResult) {
+            // Released too early!
+            if (gripProgress < gripTarget) {
+                resultMessage = `Let go too soon! (Round ${round}/${maxRounds})`;
+                showResult = true;
+                phaseTimer = 0;
+            }
+        }
+    });
+
+    onKeyPress('enter', () => {
+        if (showResult) {
+            showResult = false;
+            round++;
+
+            // Check if quest is complete
+            if (round > maxRounds) {
+                if (roundsWon >= 3) {
+                    // Success! Won at least 3 out of 5 rounds
+                    gameState.player.completedQuests.add('da_wire');
+                    go('questComplete', { questName: 'Da Wire' });
+                } else {
+                    // Failed - not enough rounds won
+                    go('questComplete', {
+                        questName: 'Da Wire',
+                        failed: true,
+                        message: `Only got ${roundsWon}/5 rounds. Try again!`
+                    });
+                }
+            } else {
+                // Next round
+                phase = 'watch';
+                phaseTimer = 0;
+                wirePosition = 0;
+                wireDirection = 1;
             }
         }
     });
