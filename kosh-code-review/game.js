@@ -5,7 +5,7 @@ kaboom({
     width: 800,
     height: 600,
     scale: 1,
-    background: [255, 248, 252], // Soft blush kawaii background
+    background: [20, 20, 30],
 });
 
 // Load all sprites
@@ -24,44 +24,6 @@ loadSprite('food_bowl_full', 'assets/sprites/food_bowl_full.png');
 loadSprite('easter_egg', 'assets/sprites/easter_egg.png');
 loadSprite('raccoon_toy', 'assets/sprites/raccoon_toy.png');
 loadSprite('wardrobe', 'assets/sprites/wardrobe.png');
-
-// ===========================
-// KAWAII UTILITY FUNCTIONS
-// ===========================
-
-// Sparkle particle burst effect
-function sparkleBurst(p, n = 16) {
-    for (let i = 0; i < n; i++) {
-        const ang = rand(0, 360);
-        const spd = rand(120, 240);
-        add([
-            pos(p),
-            circle(2),
-            color(rand(230, 255), rand(170, 220), rand(220, 255)),
-            opacity(1),
-            move(ang, spd),
-            lifespan(0.6, { fade: 0.35 }),
-            z(9999),
-        ]);
-    }
-}
-
-// Draw hearts for energy display
-function drawHearts(cur, max) {
-    const s = 20;
-    const heartPerRow = 10;
-    for (let i = 0; i < max; i++) {
-        const row = Math.floor(i / heartPerRow);
-        const col = i % heartPerRow;
-        drawText({
-            text: i < cur ? "❤" : "♡",
-            pos: vec2(20 + col * (s + 6), 20 + row * (s + 4)),
-            size: s,
-            color: rgb(255, 125, 170),
-            z: 9000,
-        });
-    }
-}
 
 // Game configuration
 const CONFIG = {
