@@ -19,6 +19,11 @@ loadSprite('dad_awake', 'assets/sprites/dad_awake.png');
 loadSprite('window_closed', 'assets/sprites/window_closed.png');
 loadSprite('window_open', 'assets/sprites/window_open.png');
 loadSprite('bedroom_bg', 'assets/sprites/bedroom_bg.png');
+loadSprite('food_bowl_empty', 'assets/sprites/food_bowl_empty.png');
+loadSprite('food_bowl_full', 'assets/sprites/food_bowl_full.png');
+loadSprite('easter_egg', 'assets/sprites/easter_egg.png');
+loadSprite('raccoon_toy', 'assets/sprites/raccoon_toy.png');
+loadSprite('wardrobe', 'assets/sprites/wardrobe.png');
 
 // Game configuration
 const CONFIG = {
