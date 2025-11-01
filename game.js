@@ -1375,8 +1375,17 @@ scene('witchInWardrobe', () => {
     let catchCount = 0;
     const targetCatches = 7; // Need to catch 7/10
 
+    // Intro animation state
+    let phase = 'approach'; // 'approach', 'opening', 'jumping', 'inside_waiting', 'inside_peeking'
+    let introTimer = 0;
+    let koshX = 100;
+    let koshY = 400;
+    const wardrobeX = 450;
+    const wardrobeY = 150;
+    let wardrobeOpen = false;
+    let wardrobeDoorAngle = 0; // For opening animation
+
     // Peek-a-boo state
-    let phase = 'waiting'; // 'waiting', 'peeking', 'result'
     let raccoonVisible = false;
     let raccoonX = 0;
     let raccoonY = 0;
@@ -1387,32 +1396,26 @@ scene('witchInWardrobe', () => {
     let resultMessage = '';
     let showResult = false;
 
-    // Kosh position
-    const koshX = 200;
-    const koshY = 400;
-
-    // Wardrobe zones where raccoon can peek
-    const peekPositions = [
-        { x: 520, y: 180, label: 'top-left' },
-        { x: 600, y: 180, label: 'top-right' },
-        { x: 520, y: 280, label: 'mid-left' },
-        { x: 600, y: 280, label: 'mid-right' },
-        { x: 560, y: 380, label: 'bottom' },
-    ];
-
     function startWait() {
-        phase = 'waiting';
+        phase = 'inside_waiting';
         waitTimer = 0;
-        waitDuration = rand(0.8, 1.5); // Wait 0.8-1.5 seconds
+        waitDuration = rand(0.8, 1.5);
     }
 
     function startPeek() {
-        phase = 'peeking';
+        phase = 'inside_peeking';
         raccoonVisible = true;
         peekTimer = 0;
-        peekDuration = rand(0.6, 1.2); // Peek for 0.6-1.2 seconds
+        peekDuration = rand(0.6, 1.2);
 
-        // Choose random position
+        // Random positions inside the wardrobe (on the walls/shelves)
+        const peekPositions = [
+            { x: 500, y: 220 },
+            { x: 560, y: 220 },
+            { x: 620, y: 220 },
+            { x: 500, y: 300 },
+            { x: 620, y: 300 },
+        ];
         const pos = choose(peekPositions);
         raccoonX = pos.x;
         raccoonY = pos.y;
@@ -1423,9 +1426,9 @@ scene('witchInWardrobe', () => {
 
         if (caught) {
             catchCount++;
-            resultMessage = `Caught! (${catchCount}/${maxRounds})`;
+            resultMessage = `Got it! (${catchCount}/${maxRounds})`;
         } else {
-            resultMessage = `Missed! (${catchCount}/${maxRounds})`;
+            resultMessage = `Too slow! (${catchCount}/${maxRounds})`;
         }
 
         showResult = true;
@@ -1448,16 +1451,47 @@ scene('witchInWardrobe', () => {
         });
     }
 
-    // Start first round
-    startWait();
-
     onUpdate(() => {
-        if (phase === 'waiting') {
+        introTimer += dt();
+
+        // Intro sequence
+        if (phase === 'approach') {
+            // Kosh walks toward wardrobe
+            koshX = lerp(100, wardrobeX - 100, Math.min(introTimer / 1.5, 1));
+            if (introTimer >= 1.5) {
+                phase = 'opening';
+                introTimer = 0;
+            }
+        } else if (phase === 'opening') {
+            // Wardrobe doors open
+            wardrobeDoorAngle = lerp(0, 1, Math.min(introTimer / 0.8, 1));
+            if (introTimer >= 0.8) {
+                wardrobeOpen = true;
+                phase = 'jumping';
+                introTimer = 0;
+            }
+        } else if (phase === 'jumping') {
+            // Kosh jumps into wardrobe
+            const jumpProgress = Math.min(introTimer / 0.6, 1);
+            koshX = lerp(wardrobeX - 100, wardrobeX + 60, jumpProgress);
+            // Jump arc
+            const jumpHeight = Math.sin(jumpProgress * Math.PI) * 80;
+            koshY = 400 - jumpHeight;
+
+            if (introTimer >= 0.6) {
+                phase = 'inside_waiting';
+                introTimer = 0;
+                koshX = wardrobeX + 60;
+                koshY = 320;
+                // Start first round
+                startWait();
+            }
+        } else if (phase === 'inside_waiting') {
             waitTimer += dt();
             if (waitTimer >= waitDuration) {
                 startPeek();
             }
-        } else if (phase === 'peeking') {
+        } else if (phase === 'inside_peeking') {
             peekTimer += dt();
             if (peekTimer >= peekDuration) {
                 // Raccoon disappears without being caught
@@ -1482,75 +1516,142 @@ scene('witchInWardrobe', () => {
             color: rgb(255, 200, 255),
         });
 
-        // Round counter
-        drawTextShadow(`Round: ${round}/${maxRounds}`, 50, 60, {
-            size: 20,
-            color: rgb(255, 220, 80),
-        });
-
-        drawTextShadow(`Caught: ${catchCount}/${targetCatches}`, width() - 200, 60, {
-            size: 20,
-            color: catchCount >= targetCatches ? rgb(50, 255, 100) : rgb(255, 255, 255),
-        });
-
-        // Wardrobe
-        drawSprite({
-            sprite: 'wardrobe',
-            pos: vec2(420, 150),
-            scale: 2,
-        });
-
-        // Raccoon peeking
-        if (raccoonVisible) {
+        // INTRO SEQUENCE (approach, opening, jumping)
+        if (phase === 'approach' || phase === 'opening' || phase === 'jumping') {
+            // Show wardrobe from outside
             drawSprite({
-                sprite: 'raccoon_toy',
-                pos: vec2(raccoonX, raccoonY),
-                scale: 1.8,
+                sprite: 'wardrobe',
+                pos: vec2(wardrobeX, wardrobeY),
+                scale: 2.5,
+            });
+
+            // Show wardrobe doors opening
+            if (phase === 'opening' || phase === 'jumping') {
+                // Dark interior visible when doors open
+                const doorOpenness = wardrobeDoorAngle * 60;
+                drawRect({
+                    pos: vec2(wardrobeX + 50 - doorOpenness, wardrobeY + 80),
+                    width: doorOpenness * 2,
+                    height: 180,
+                    color: rgb(20, 15, 25),
+                });
+            }
+
+            // Kosh approaching/jumping
+            const koshSprite = phase === 'jumping' ? 'kosh_zoomies' : 'kosh_idle';
+            drawSprite({
+                sprite: koshSprite,
+                pos: vec2(koshX, koshY),
+                scale: 2.5,
                 anchor: 'center',
             });
-        }
 
-        // Kosh watching
-        drawSprite({
-            sprite: 'kosh_idle',
-            pos: vec2(koshX, koshY),
-            scale: 2.5,
-            anchor: 'center',
-        });
+            // Instructions for intro
+            let instructions = '';
+            if (phase === 'approach') instructions = 'Kosh approaches the mysterious wardrobe...';
+            if (phase === 'opening') instructions = 'The wardrobe doors creak open...';
+            if (phase === 'jumping') instructions = 'Kosh leaps inside!';
 
-        // Instructions
-        if (phase === 'waiting') {
-            drawTextShadow('Get ready...', width() / 2, 500, {
-                size: 24,
+            drawTextShadow(instructions, width() / 2, 480, {
+                size: 22,
                 align: 'center',
-                color: rgb(255, 200, 100),
-            });
-        } else if (phase === 'peeking') {
-            drawTextShadow('Click the raccoon!', width() / 2, 500, {
-                size: 24,
-                align: 'center',
-                color: rgb(255, 100, 100),
+                color: rgb(255, 220, 150),
             });
         }
-
-        // Result message
-        if (showResult) {
-            drawTextShadow(resultMessage, width() / 2, 450, {
-                size: 28,
-                align: 'center',
-                color: catchCount > 0 && resultMessage.includes('Caught') ? rgb(50, 255, 100) : rgb(255, 150, 150),
+        // INSIDE THE WARDROBE (gameplay)
+        else {
+            // Round counter
+            drawTextShadow(`Round: ${round}/${maxRounds}`, 50, 60, {
+                size: 20,
+                color: rgb(255, 220, 80),
             });
+
+            drawTextShadow(`Caught: ${catchCount}/${targetCatches}`, width() - 200, 60, {
+                size: 20,
+                color: catchCount >= targetCatches ? rgb(50, 255, 100) : rgb(255, 255, 255),
+            });
+
+            // Inside wardrobe view - darker, cozy space
+            drawRect({
+                pos: vec2(200, 150),
+                width: 450,
+                height: 350,
+                color: rgb(40, 35, 50),
+            });
+
+            // Wardrobe interior details (shelves, walls)
+            drawRect({
+                pos: vec2(210, 160),
+                width: 430,
+                height: 8,
+                color: rgb(60, 50, 40),
+            });
+            drawRect({
+                pos: vec2(210, 280),
+                width: 430,
+                height: 8,
+                color: rgb(60, 50, 40),
+            });
+
+            // Kosh inside (bottom of wardrobe, crouched)
+            drawSprite({
+                sprite: 'kosh_idle',
+                pos: vec2(koshX, koshY),
+                scale: 2.2,
+                anchor: 'center',
+            });
+
+            // Raccoon peeking
+            if (raccoonVisible) {
+                drawSprite({
+                    sprite: 'raccoon_toy',
+                    pos: vec2(raccoonX, raccoonY),
+                    scale: 1.8,
+                    anchor: 'center',
+                });
+
+                // Exclamation mark above raccoon
+                drawTextShadow('!', raccoonX, raccoonY - 30, {
+                    size: 28,
+                    align: 'center',
+                    color: rgb(255, 100, 100),
+                });
+            }
+
+            // Instructions
+            if (phase === 'inside_waiting') {
+                drawTextShadow('Waiting for raccoon...', width() / 2, 520, {
+                    size: 20,
+                    align: 'center',
+                    color: rgb(200, 200, 150),
+                });
+            } else if (phase === 'inside_peeking') {
+                drawTextShadow('Click it quick!', width() / 2, 520, {
+                    size: 24,
+                    align: 'center',
+                    color: rgb(255, 100, 100),
+                });
+            }
+
+            // Result message
+            if (showResult) {
+                drawTextShadow(resultMessage, width() / 2, 450, {
+                    size: 26,
+                    align: 'center',
+                    color: resultMessage.includes('Got it') ? rgb(50, 255, 100) : rgb(255, 150, 150),
+                });
+            }
         }
 
         // Bottom instructions
-        drawTextShadow('Click the raccoon when it peeks!  ESC: exit', width() / 2, height() - 20, {
+        drawTextShadow('ESC: exit', width() / 2, height() - 20, {
             size: 16,
             align: 'center',
         });
     });
 
     onClick(() => {
-        if (raccoonVisible && phase === 'peeking') {
+        if (raccoonVisible && phase === 'inside_peeking') {
             const mouse = mousePos();
 
             // Check if click is near raccoon (generous hitbox)
