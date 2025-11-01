@@ -141,7 +141,7 @@ scene('mainMenu', () => {
     onDraw(() => {
         // Title
         drawTextShadow('THE ADVENTURES OF KOSH', width() / 2, 100, {
-            size: 36,
+            size: 32,
             align: 'center',
             color: rgb(255, 200, 50),
         });
