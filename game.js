@@ -303,7 +303,7 @@ scene('overworld', () => {
         });
 
         // Player stats
-        drawEnergyBar(gameState.player.energy, gameState.player.maxEnergy);
+        drawHearts(gameState.player.energy, gameState.player.maxEnergy);
 
         const completion = (gameState.player.completedQuests.size / 3) * 100;
         drawTextShadow(`Completion: ${completion.toFixed(0)}%`, width() - 250, 25, {
@@ -460,6 +460,7 @@ scene('windowWitch', () => {
 
         if (success) {
             addSparkles(380, 320, 8, [50, 255, 100]);
+            sparkleBurst(vec2(380, 320), 12); // Kawaii sparkle burst!
 
             if (targetDad === 1) {
                 dad1Awake = true;
@@ -487,6 +488,7 @@ scene('windowWitch', () => {
                 addSparkles(400, 300, 3, [255, 150, 150]);
             }
             addSparkles(400, 300, 15, [255, 220, 80]);
+            sparkleBurst(vec2(400, 300), 24); // Big kawaii sparkle burst for victory!
         } else {
             resultMessage = 'They said "later, Kosh..." Maybe try again?';
         }
@@ -525,7 +527,7 @@ scene('windowWitch', () => {
         });
 
         // Energy bar (top left)
-        drawEnergyBar(gameState.player.energy, gameState.player.maxEnergy);
+        drawHearts(gameState.player.energy, gameState.player.maxEnergy);
 
         // Title (moved down to avoid overlap)
         drawTextShadow('WINDOW WITCH', width() / 2, 55, {
@@ -785,6 +787,7 @@ scene('windowWitch', () => {
                 for (let i = 0; i < 30; i++) {
                     addSparkles(easterEggX, eggPosY, 3, [255, 200, 255]);
                 }
+                sparkleBurst(vec2(easterEggX, eggPosY), 32); // MEGA kawaii sparkle burst!
 
                 resultMessage = '🥚 You found a secret easter egg! A mysterious wardrobe has appeared in the overworld...';
                 showResult = true;
