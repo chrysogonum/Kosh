@@ -139,15 +139,21 @@ scene('mainMenu', () => {
     const menuOptions = ['New Game', 'Continue', 'Quit'];
 
     onDraw(() => {
-        // Title
-        drawTextShadow('THE ADVENTURES OF KOSH', width() / 2, 100, {
+        // Title (split into two lines to prevent cutoff)
+        drawTextShadow('THE ADVENTURES', width() / 2, 80, {
+            size: 32,
+            align: 'center',
+            color: rgb(255, 200, 50),
+        });
+
+        drawTextShadow('OF KOSH', width() / 2, 120, {
             size: 32,
             align: 'center',
             color: rgb(255, 200, 50),
         });
 
         drawTextShadow('A tale of a little black cat', width() / 2, 160, {
-            size: 20,
+            size: 18,
             align: 'center',
             color: rgb(255, 220, 80),
         });
