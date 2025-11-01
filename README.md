@@ -7,6 +7,10 @@ A Pokemon-style quest game featuring a little black cat named Kosh!
 
 ## 🎮 [Play the Game!](https://chrysogonum.github.io/Kosh/)
 
+> 💝 **Kawaii Edition** - This is the latest version with pastel styling and mobile controls!
+>
+> 🕰️ **Want the original version?** Check out the [original v1.0](https://chrysogonum.github.io/Kosh-Original/)
+
 ## 📖 Story
 
 Join Kosh, an adorable little black cat, on epic quests around the house! Complete three main quests and discover a hidden secret quest for the truly curious.
