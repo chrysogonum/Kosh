@@ -1,0 +1,33 @@
+# Python files (we don't need these for the web version)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# Save files
+saves/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python-specific files (keep the web version only)
+main.py
+generate_sprites.py
+requirements.txt
+config.yaml
+game/*.py
+quests/*.py
