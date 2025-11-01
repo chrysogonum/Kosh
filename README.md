@@ -28,8 +28,15 @@ Master the art of licking the string toy while holding it!
 - 📈 **Progressive Difficulty** - Gets 8% faster each round
 - 🎯 **Win Condition** - Successfully complete 2 out of 5 rounds
 
-### Quest 3: In and Out (Coming Soon)
+### Quest 3: In and Out ✅
 Check if new food has magically appeared in the bowl!
+
+**Mechanics:**
+- 🏃 **Energy Management** - Each trip costs 10 energy
+- 🎲 **RNG Challenge** - 20% chance food appears after 3+ trips
+- 🤔 **False Positives** - Sometimes you think you see food but it's empty
+- ⚡ **Risk vs Reward** - Keep checking or conserve energy?
+- 🎯 **Win Condition** - Find the food before running out of energy!
 
 ## ✨ Features
 

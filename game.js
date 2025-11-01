@@ -217,6 +217,12 @@ scene('overworld', () => {
             menuOptions.push('[DONE] Da Wire');
         }
 
+        if (!gameState.player.completedQuests.has('in_and_out')) {
+            menuOptions.push('Start: In and Out');
+        } else {
+            menuOptions.push('[DONE] In and Out');
+        }
+
         menuOptions.push('Save Game');
         menuOptions.push('Main Menu');
     }
@@ -296,6 +302,8 @@ scene('overworld', () => {
             go('windowWitch');
         } else if (choice === 'Start: Da Wire') {
             go('daWire');
+        } else if (choice === 'Start: In and Out') {
+            go('inAndOut');
         } else if (choice === 'Save Game') {
             // Save to localStorage
             const saveData = {
@@ -939,6 +947,314 @@ scene('daWire', () => {
                 wirePosition = 0;
                 wireDirection = 1;
             }
+        }
+    });
+
+    onKeyPress('escape', () => {
+        go('overworld');
+    });
+});
+
+// ===========================
+// IN AND OUT QUEST SCENE
+// ===========================
+scene('inAndOut', () => {
+    let trips = 0;
+    const maxTrips = 10;
+    const energyPerTrip = 10;
+    let foodFound = false;
+    let tripsSinceStart = 0;
+    let showResult = false;
+    let resultMessage = '';
+
+    // Animation state
+    let koshPosition = 'inside'; // 'inside', 'going_out', 'outside', 'coming_back'
+    let animTimer = 0;
+    const animDuration = 1000; // 1 second per animation
+
+    // Food mechanics
+    let foodAppeared = false;
+    const minTripsForFood = 3; // Minimum trips before food can appear
+    const foodChance = 0.20; // 20% chance each trip after minimum
+    const falsePositiveChance = 0.15; // 15% chance of thinking you see food
+
+    onUpdate(() => {
+        if (koshPosition === 'going_out' || koshPosition === 'coming_back') {
+            animTimer += dt() * 1000;
+
+            if (animTimer >= animDuration) {
+                animTimer = 0;
+
+                if (koshPosition === 'going_out') {
+                    koshPosition = 'outside';
+                    // Check if food appeared this trip
+                    if (!foodAppeared && tripsSinceStart >= minTripsForFood) {
+                        if (rand() < foodChance) {
+                            foodAppeared = true;
+                        }
+                    }
+                } else {
+                    koshPosition = 'inside';
+                }
+            }
+        }
+    });
+
+    onDraw(() => {
+        // Background - kitchen view
+        drawRect({
+            pos: vec2(0, 0),
+            width: width(),
+            height: height(),
+            color: rgb(90, 80, 110),
+        });
+
+        // Title
+        drawTextShadow('IN AND OUT', width() / 2, 30, {
+            size: 28,
+            align: 'center',
+        });
+
+        // Energy and trip counter
+        drawTextShadow(`Energy: ${gameState.player.energy}/${gameState.player.maxEnergy}`, 50, 60, {
+            size: 20,
+            color: gameState.player.energy < 30 ? rgb(255, 50, 50) : rgb(255, 255, 255),
+        });
+
+        drawTextShadow(`Trips: ${trips}/${maxTrips}`, width() - 200, 60, {
+            size: 20,
+            color: rgb(255, 220, 80),
+        });
+
+        // Draw room divider (door)
+        const dividerX = width() / 2;
+        drawLine({
+            p1: vec2(dividerX, 100),
+            p2: vec2(dividerX, height()),
+            width: 4,
+            color: rgb(60, 50, 80),
+        });
+
+        // Labels
+        drawTextShadow('INSIDE', width() / 4, 120, {
+            size: 24,
+            align: 'center',
+            color: rgb(180, 180, 200),
+        });
+
+        drawTextShadow('OUTSIDE', width() * 3/4, 120, {
+            size: 24,
+            align: 'center',
+            color: rgb(180, 180, 200),
+        });
+
+        // Draw food bowl (outside)
+        const bowlX = width() * 3/4;
+        const bowlY = 300;
+
+        // Bowl
+        drawCircle({
+            pos: vec2(bowlX, bowlY + 20),
+            radius: 40,
+            color: rgb(200, 150, 150),
+        });
+        drawCircle({
+            pos: vec2(bowlX, bowlY + 15),
+            radius: 35,
+            color: rgb(150, 100, 100),
+        });
+
+        // Food in bowl (if appeared)
+        if (foodAppeared && koshPosition === 'outside') {
+            // Yummy food!
+            for (let i = 0; i < 5; i++) {
+                const angle = (i / 5) * Math.PI * 2;
+                const fx = bowlX + Math.cos(angle) * 15;
+                const fy = bowlY + Math.sin(angle) * 8 + 10;
+                drawCircle({
+                    pos: vec2(fx, fy),
+                    radius: 8,
+                    color: rgb(160, 100, 60),
+                });
+            }
+
+            // Shine/sparkle on food
+            drawCircle({
+                pos: vec2(bowlX, bowlY + 5),
+                radius: 3,
+                color: rgb(255, 255, 200),
+            });
+        }
+
+        // Draw Kosh based on position
+        let koshX, koshY;
+        let koshSprite = 'kosh_idle';
+
+        if (koshPosition === 'inside') {
+            koshX = width() / 4;
+            koshY = 350;
+            koshSprite = 'kosh_idle';
+        } else if (koshPosition === 'going_out') {
+            // Animate moving right
+            const progress = animTimer / animDuration;
+            koshX = width() / 4 + (width() / 2) * progress;
+            koshY = 350;
+            koshSprite = 'kosh_zoomies';
+        } else if (koshPosition === 'outside') {
+            koshX = width() * 3/4;
+            koshY = 350;
+            koshSprite = foodAppeared ? 'kosh_meow' : 'kosh_idle';
+        } else { // coming_back
+            // Animate moving left
+            const progress = animTimer / animDuration;
+            koshX = width() * 3/4 - (width() / 2) * progress;
+            koshY = 350;
+            koshSprite = 'kosh_zoomies';
+        }
+
+        // Glow
+        for (let ox = -1; ox <= 1; ox++) {
+            for (let oy = -1; oy <= 1; oy++) {
+                if (ox === 0 && oy === 0) continue;
+                drawSprite({
+                    sprite: koshSprite,
+                    pos: vec2(koshX + ox, koshY + oy),
+                    scale: 2,
+                    anchor: 'center',
+                    opacity: 0.3,
+                    color: rgb(180, 180, 100),
+                });
+            }
+        }
+
+        drawSprite({
+            sprite: koshSprite,
+            pos: vec2(koshX, koshY),
+            scale: 2,
+            anchor: 'center',
+        });
+
+        // Show result or instructions
+        if (showResult) {
+            const boxX = 100;
+            const boxY = 420;
+            const boxWidth = 600;
+            const boxHeight = 120;
+
+            drawRect({
+                pos: vec2(boxX, boxY),
+                width: boxWidth,
+                height: boxHeight,
+                color: rgb(50, 50, 70),
+            });
+
+            drawText({
+                text: resultMessage + '\n\nPress ENTER to continue',
+                pos: vec2(boxX + 20, boxY + 20),
+                size: 20,
+                width: boxWidth - 40,
+            });
+        } else if (koshPosition === 'inside') {
+            let instructions = '';
+
+            if (trips === 0) {
+                instructions = 'Press SPACE to check the food bowl!';
+            } else if (gameState.player.energy < energyPerTrip) {
+                instructions = 'Not enough energy! You must give up...';
+            } else {
+                instructions = 'Press SPACE to check again... or ENTER to give up';
+            }
+
+            drawTextShadow(instructions, width() / 2, 500, {
+                size: 20,
+                align: 'center',
+                color: rgb(255, 220, 80),
+            });
+        } else if (koshPosition === 'outside') {
+            if (foodAppeared) {
+                drawTextShadow('FOOD! There\'s food! Press ENTER!', width() / 2, 500, {
+                    size: 24,
+                    align: 'center',
+                    color: rgb(50, 255, 100),
+                });
+            } else {
+                // False positive check
+                const hasFalsePositive = trips > 0 && rand() < falsePositiveChance;
+
+                if (hasFalsePositive) {
+                    drawTextShadow('Wait... is that food? No, just the same empty bowl...', width() / 2, 500, {
+                        size: 18,
+                        align: 'center',
+                        color: rgb(255, 150, 50),
+                    });
+                } else {
+                    drawTextShadow('Empty... Press ENTER to go back inside', width() / 2, 500, {
+                        size: 20,
+                        align: 'center',
+                        color: rgb(200, 200, 200),
+                    });
+                }
+            }
+        }
+
+        // Controls
+        drawTextShadow('SPACE: Check bowl | ENTER: Continue/Give up | ESC: Exit quest', width() / 2, height() - 20, {
+            size: 16,
+            align: 'center',
+        });
+    });
+
+    onKeyPress('space', () => {
+        if (showResult) return;
+
+        if (koshPosition === 'inside') {
+            // Check if can afford the trip
+            if (gameState.player.energy < energyPerTrip) {
+                resultMessage = `Ran out of energy after ${trips} trips! No food found. The hunger continues...`;
+                showResult = true;
+                return;
+            }
+
+            if (trips >= maxTrips) {
+                resultMessage = `Checked ${maxTrips} times! That's enough for today. Still no food...`;
+                showResult = true;
+                return;
+            }
+
+            // Use energy and go check
+            gameState.player.energy -= energyPerTrip;
+            trips++;
+            tripsSinceStart++;
+            koshPosition = 'going_out';
+            animTimer = 0;
+        }
+    });
+
+    onKeyPress('enter', () => {
+        if (showResult) {
+            if (foodFound) {
+                // Success!
+                gameState.player.completedQuests.add('in_and_out');
+                go('questComplete', { questName: 'In and Out' });
+            } else {
+                // Failed
+                go('overworld');
+            }
+        } else if (koshPosition === 'outside') {
+            if (foodAppeared) {
+                // Found food!
+                foodFound = true;
+                resultMessage = `SUCCESS! Food appeared after ${trips} trips! Time to eat!`;
+                showResult = true;
+            } else {
+                // Go back inside
+                koshPosition = 'coming_back';
+                animTimer = 0;
+            }
+        } else if (koshPosition === 'inside' && trips > 0) {
+            // Give up
+            resultMessage = `Gave up after ${trips} trips. Maybe there will be food next time?`;
+            showResult = true;
         }
     });
 
