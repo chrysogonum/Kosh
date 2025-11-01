@@ -8,6 +8,16 @@ kaboom({
     background: [255, 248, 252], // Soft blush kawaii background
 });
 
+// Virtual button state for mobile touch controls
+window.koshInput = {
+    virtualPress: null, // Stores the last virtual key press
+    consumePress() {
+        const key = this.virtualPress;
+        this.virtualPress = null;
+        return key;
+    }
+};
+
 // Load all sprites
 loadSprite('kosh_idle', 'assets/sprites/kosh_idle.png');
 loadSprite('kosh_meow', 'assets/sprites/kosh_meow.png');
@@ -97,6 +107,20 @@ function uiPill(text, y, { selected = false, centered = true } = {}) {
 // Get idle bob offset (gentle sine wave)
 function getBobOffset(speed = 3, amplitude = 3) {
     return Math.sin(time() * speed) * amplitude;
+}
+
+// Enhanced key press handler that works with both keyboard and touch
+function onAnyKeyPress(key, callback) {
+    // Listen for keyboard input
+    onAnyKeyPress(key, callback);
+
+    // Check for virtual input every frame
+    onUpdate(() => {
+        const virtualKey = window.koshInput.consumePress();
+        if (virtualKey === key) {
+            callback();
+        }
+    });
 }
 
 // Apply entrance tween to a game object
@@ -247,15 +271,15 @@ scene('mainMenu', () => {
         drawMenu('', menuOptions, selectedIndex, 300);
     });
 
-    onKeyPress('up', () => {
+    onAnyKeyPress('up', () => {
         selectedIndex = (selectedIndex - 1 + menuOptions.length) % menuOptions.length;
     });
 
-    onKeyPress('down', () => {
+    onAnyKeyPress('down', () => {
         selectedIndex = (selectedIndex + 1) % menuOptions.length;
     });
 
-    onKeyPress('enter', () => {
+    onAnyKeyPress('enter', () => {
         const choice = menuOptions[selectedIndex];
         if (choice === 'New Game') {
             // Reset player state
@@ -382,15 +406,15 @@ scene('overworld', () => {
         drawMenu('Available Quests', menuOptions, selectedIndex, 200);
     });
 
-    onKeyPress('up', () => {
+    onAnyKeyPress('up', () => {
         selectedIndex = (selectedIndex - 1 + menuOptions.length) % menuOptions.length;
     });
 
-    onKeyPress('down', () => {
+    onAnyKeyPress('down', () => {
         selectedIndex = (selectedIndex + 1) % menuOptions.length;
     });
 
-    onKeyPress('enter', () => {
+    onAnyKeyPress('enter', () => {
         const choice = menuOptions[selectedIndex];
 
         if (choice === 'Start: Window Witch') {
@@ -771,19 +795,19 @@ scene('windowWitch', () => {
         });
     });
 
-    onKeyPress('up', () => {
+    onAnyKeyPress('up', () => {
         if (!showResult && (!dad1Awake || !dad2Awake)) {
             selectedOption = (selectedOption - 1 + tactics.length) % tactics.length;
         }
     });
 
-    onKeyPress('down', () => {
+    onAnyKeyPress('down', () => {
         if (!showResult && (!dad1Awake || !dad2Awake)) {
             selectedOption = (selectedOption + 1) % tactics.length;
         }
     });
 
-    onKeyPress('enter', () => {
+    onAnyKeyPress('enter', () => {
         if (showResult) {
             showResult = false;
             koshAction = null;
@@ -802,7 +826,7 @@ scene('windowWitch', () => {
         }
     });
 
-    onKeyPress('escape', () => {
+    onAnyKeyPress('escape', () => {
         go('overworld');
     });
 
@@ -1075,7 +1099,7 @@ scene('daWire', () => {
         });
     });
 
-    onKeyPress('space', () => {
+    onAnyKeyPress('space', () => {
         if (showResult) return;
 
         if (phase === 'lick') {
@@ -1106,7 +1130,7 @@ scene('daWire', () => {
         }
     });
 
-    onKeyPress('enter', () => {
+    onAnyKeyPress('enter', () => {
         if (showResult) {
             showResult = false;
             round++;
@@ -1135,7 +1159,7 @@ scene('daWire', () => {
         }
     });
 
-    onKeyPress('escape', () => {
+    onAnyKeyPress('escape', () => {
         go('overworld');
     });
 });
@@ -1389,7 +1413,7 @@ scene('inAndOut', () => {
         });
     });
 
-    onKeyPress('space', () => {
+    onAnyKeyPress('space', () => {
         if (showResult) return;
 
         if (koshPosition === 'inside') {
@@ -1415,7 +1439,7 @@ scene('inAndOut', () => {
         }
     });
 
-    onKeyPress('enter', () => {
+    onAnyKeyPress('enter', () => {
         if (showResult) {
             if (foodFound) {
                 // Success!
@@ -1443,7 +1467,7 @@ scene('inAndOut', () => {
         }
     });
 
-    onKeyPress('escape', () => {
+    onAnyKeyPress('escape', () => {
         go('overworld');
     });
 });
@@ -1755,7 +1779,7 @@ scene('witchInWardrobe', () => {
         }
     });
 
-    onKeyPress('escape', () => {
+    onAnyKeyPress('escape', () => {
         go('overworld');
     });
 });
@@ -1803,7 +1827,7 @@ scene('questComplete', ({ questName }) => {
         });
     });
 
-    onKeyPress('enter', () => {
+    onAnyKeyPress('enter', () => {
         go('overworld');
     });
 });

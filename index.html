@@ -163,43 +163,46 @@
 
     <script>
         // Mobile control bindings
-        function simulateKey(key) {
-            window.dispatchEvent(new KeyboardEvent('keydown', { key: key }));
+        function pressVirtualKey(key) {
+            // Set the virtual key press for Kaboom to consume
+            if (window.koshInput) {
+                window.koshInput.virtualPress = key;
+            }
         }
 
         document.getElementById('btn-up')?.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            simulateKey('ArrowUp');
+            pressVirtualKey('up');
         });
 
         document.getElementById('btn-down')?.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            simulateKey('ArrowDown');
+            pressVirtualKey('down');
         });
 
         document.getElementById('btn-left')?.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            simulateKey('ArrowLeft');
+            pressVirtualKey('left');
         });
 
         document.getElementById('btn-right')?.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            simulateKey('ArrowRight');
+            pressVirtualKey('right');
         });
 
         document.getElementById('btn-a')?.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            simulateKey('Enter');
+            pressVirtualKey('enter');
         });
 
         document.getElementById('btn-b')?.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            simulateKey('Escape');
+            pressVirtualKey('escape');
         });
 
         document.getElementById('btn-space')?.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            simulateKey(' ');
+            pressVirtualKey('space');
         });
     </script>
 </body>
