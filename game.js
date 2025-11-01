@@ -346,7 +346,7 @@ scene('windowWitch', () => {
     let koshAction = null;
 
     // Easter egg mechanics
-    const easterEggSpawnChance = 0.20; // 20% chance to spawn
+    const easterEggSpawnChance = 0.75; // 75% chance to spawn (increased for discoverability!)
     let easterEggVisible = false;
     let easterEggX = 0;
     let easterEggY = 0;
