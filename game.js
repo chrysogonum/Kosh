@@ -1422,6 +1422,10 @@ scene('witchInWardrobe', () => {
     }
 
     function endPeek(caught) {
+        // Prevent double-calling by immediately changing phase
+        if (phase !== 'inside_peeking') return;
+
+        phase = 'result';
         raccoonVisible = false;
 
         if (caught) {
@@ -1631,6 +1635,8 @@ scene('witchInWardrobe', () => {
                     align: 'center',
                     color: rgb(255, 100, 100),
                 });
+            } else if (phase === 'result') {
+                // Show nothing during result display
             }
 
             // Result message
