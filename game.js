@@ -431,14 +431,14 @@ scene('windowWitch', () => {
             pos: vec2(0, 0),
         });
 
-        // Title
-        drawTextShadow('WINDOW WITCH', width() / 2, 20, {
-            size: 32,
+        // Energy bar (top left)
+        drawEnergyBar(gameState.player.energy, gameState.player.maxEnergy);
+
+        // Title (moved down to avoid overlap)
+        drawTextShadow('WINDOW WITCH', width() / 2, 55, {
+            size: 28,
             align: 'center',
         });
-
-        // Energy bar
-        drawEnergyBar(gameState.player.energy, gameState.player.maxEnergy);
 
         // Dad 1
         drawSprite({
