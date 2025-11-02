@@ -1893,16 +1893,11 @@ scene('birdWatching', () => {
 
     onDraw(() => {
         // Bedroom background
-        loadSprite('bedroom_bg') ? drawSprite({
+        drawSprite({
             sprite: 'bedroom_bg',
             pos: vec2(0, 0),
             width: width(),
             height: height(),
-        }) : drawRect({
-            pos: vec2(0, 0),
-            width: width(),
-            height: height(),
-            color: rgb(90, 80, 110),
         });
 
         // Open window
