@@ -837,9 +837,9 @@ scene('windowWitch', () => {
             koshAction = null;
 
             if (windowOpen) {
-                // Quest complete!
+                // Quest complete! But first... BIRD WATCHING!
                 gameState.player.completedQuests.add('window_witch');
-                go('questComplete', { questName: 'Window Witch' });
+                go('birdWatching');
             }
         } else {
             if (dad1Awake && dad2Awake) {
@@ -1807,6 +1807,307 @@ scene('witchInWardrobe', () => {
 
     onAnyKeyPress('escape', () => {
         go('overworld');
+    });
+});
+
+// ===========================
+// BIRD WATCHING CELEBRATION SCENE
+// ===========================
+scene('birdWatching', () => {
+    let phase = 'birds_arriving'; // 'birds_arriving', 'watching', 'peaceful', 'done'
+    let phaseTimer = 0;
+    const birds = [];
+    let koshExcitement = 0;
+    let pawSwipes = 0;
+    let caughtBirds = 0;
+
+    // Create flying birds
+    function spawnBird() {
+        birds.push({
+            x: -50,
+            y: rand(150, 250),
+            speed: rand(150, 250),
+            size: rand(8, 14),
+            color: choose([
+                [255, 220, 100], // Yellow
+                [150, 200, 255], // Blue
+                [255, 150, 150], // Pink
+                [100, 255, 150], // Green
+            ]),
+            wingFlap: 0,
+        });
+    }
+
+    onUpdate(() => {
+        phaseTimer += dt();
+
+        // Update birds
+        for (let i = birds.length - 1; i >= 0; i--) {
+            const bird = birds[i];
+            bird.x += bird.speed * dt();
+            bird.wingFlap += dt() * 10;
+
+            // Remove birds that flew off screen
+            if (bird.x > width() + 50) {
+                birds.splice(i, 1);
+            }
+        }
+
+        // Phase management
+        if (phase === 'birds_arriving') {
+            // Spawn birds frequently
+            if (rand() < 0.4 && birds.length < 8) {
+                spawnBird();
+            }
+
+            koshExcitement = Math.min(koshExcitement + dt() * 2, 10);
+
+            if (phaseTimer > 5) {
+                phase = 'watching';
+                phaseTimer = 0;
+            }
+        } else if (phase === 'watching') {
+            // Continue spawning but slower
+            if (rand() < 0.15 && birds.length < 5) {
+                spawnBird();
+            }
+
+            if (phaseTimer > 4) {
+                phase = 'peaceful';
+                phaseTimer = 0;
+            }
+        } else if (phase === 'peaceful') {
+            // Calm down
+            koshExcitement = Math.max(koshExcitement - dt() * 1, 0);
+
+            // Fewer birds
+            if (rand() < 0.05 && birds.length < 2) {
+                spawnBird();
+            }
+
+            if (phaseTimer > 3) {
+                phase = 'done';
+            }
+        }
+    });
+
+    onDraw(() => {
+        // Bedroom background
+        loadSprite('bedroom_bg') ? drawSprite({
+            sprite: 'bedroom_bg',
+            pos: vec2(0, 0),
+            width: width(),
+            height: height(),
+        }) : drawRect({
+            pos: vec2(0, 0),
+            width: width(),
+            height: height(),
+            color: rgb(90, 80, 110),
+        });
+
+        // Open window
+        drawSprite({
+            sprite: 'window_open',
+            pos: vec2(550, 150),
+            scale: 2,
+        });
+
+        // Sky through window (bright and inviting)
+        drawRect({
+            pos: vec2(560, 160),
+            width: 140,
+            height: 140,
+            color: rgb(150, 220, 255),
+        });
+
+        // Clouds
+        drawCircle({
+            pos: vec2(600, 200),
+            radius: 20,
+            color: rgb(255, 255, 255),
+        });
+        drawCircle({
+            pos: vec2(650, 210),
+            radius: 25,
+            color: rgb(255, 255, 255),
+        });
+
+        // Draw birds
+        for (const bird of birds) {
+            const wingOffset = Math.sin(bird.wingFlap) * 5;
+
+            // Bird body
+            drawCircle({
+                pos: vec2(bird.x, bird.y),
+                radius: bird.size,
+                color: rgb(...bird.color),
+            });
+
+            // Wings
+            drawCircle({
+                pos: vec2(bird.x - bird.size/2, bird.y + wingOffset),
+                radius: bird.size * 0.6,
+                color: rgb(bird.color[0] * 0.8, bird.color[1] * 0.8, bird.color[2] * 0.8),
+            });
+            drawCircle({
+                pos: vec2(bird.x + bird.size/2, bird.y - wingOffset),
+                radius: bird.size * 0.6,
+                color: rgb(bird.color[0] * 0.8, bird.color[1] * 0.8, bird.color[2] * 0.8),
+            });
+
+            // Sparkle trail
+            if (rand() < 0.3) {
+                drawCircle({
+                    pos: vec2(bird.x - 10, bird.y + rand(-5, 5)),
+                    radius: 2,
+                    color: rgb(255, 255, 200),
+                    opacity: 0.6,
+                });
+            }
+        }
+
+        // Kosh watching excitedly
+        const koshX = 350;
+        const koshY = 400 + Math.sin(time() * 5) * (koshExcitement * 2);
+        const koshSprite = koshExcitement > 5 ? 'kosh_meow' : 'kosh_idle';
+
+        // Glow effect
+        for (let ox = -2; ox <= 2; ox++) {
+            for (let oy = -2; oy <= 2; oy++) {
+                if (ox === 0 && oy === 0) continue;
+                drawSprite({
+                    sprite: koshSprite,
+                    pos: vec2(koshX + ox, koshY + oy),
+                    scale: 2,
+                    anchor: 'center',
+                    opacity: 0.3,
+                    color: rgb(255, 220, 150),
+                });
+            }
+        }
+
+        drawSprite({
+            sprite: koshSprite,
+            pos: vec2(koshX, koshY),
+            scale: 2,
+            anchor: 'center',
+        });
+
+        // Hearts floating up when excited
+        if (koshExcitement > 7 && rand() < 0.3) {
+            drawText({
+                text: "❤",
+                pos: vec2(koshX + rand(-20, 20), koshY - 30 - rand(0, 40)),
+                size: 20,
+                color: rgb(255, 150, 200),
+                opacity: rand(0.4, 0.9),
+            });
+        }
+
+        // Dad 1 and Dad 2 in bed, smiling
+        drawSprite({
+            sprite: 'dad_awake',
+            pos: vec2(100, 350),
+            scale: 2,
+        });
+        drawSprite({
+            sprite: 'dad_awake',
+            pos: vec2(200, 350),
+            scale: 2,
+            flipX: true,
+        });
+
+        // Zzz's above dads (they're relaxing)
+        if (phase === 'peaceful') {
+            drawText({
+                text: "☺",
+                pos: vec2(100, 320),
+                size: 24,
+                color: rgb(255, 255, 200),
+            });
+            drawText({
+                text: "☺",
+                pos: vec2(200, 320),
+                size: 24,
+                color: rgb(255, 255, 200),
+            });
+        }
+
+        // Message based on phase
+        let message = '';
+        let messageColor = rgb(255, 255, 255);
+
+        if (phase === 'birds_arriving') {
+            message = 'BIRDS! SO MANY BIRDS!';
+            messageColor = rgb(255, 220, 100);
+        } else if (phase === 'watching') {
+            message = `Kosh is mesmerized... ${caughtBirds} imaginary catches!`;
+            messageColor = rgb(150, 255, 200);
+        } else if (phase === 'peaceful') {
+            message = 'Perfect... This is the best day ever.';
+            messageColor = rgb(200, 200, 255);
+        } else if (phase === 'done') {
+            message = 'Press ENTER to bask in the glory';
+            messageColor = rgb(255, 200, 255);
+        }
+
+        drawTextShadow(message, width() / 2, 50, {
+            size: 24,
+            align: 'center',
+            color: messageColor,
+        });
+
+        // Interactive hint
+        if (phase === 'birds_arriving' || phase === 'watching') {
+            drawTextShadow('SPACE to swipe at birds!', width() / 2, height() - 30, {
+                size: 18,
+                align: 'center',
+                color: rgb(255, 255, 100),
+            });
+        }
+
+        // Stats
+        drawTextShadow(`Paw Swipes: ${pawSwipes} | Birds Spotted: ${birds.length + caughtBirds}`, 20, height() - 30, {
+            size: 16,
+            color: rgb(200, 200, 200),
+        });
+    });
+
+    onAnyKeyPress('space', () => {
+        if (phase === 'birds_arriving' || phase === 'watching') {
+            pawSwipes++;
+            koshExcitement = Math.min(koshExcitement + 2, 10);
+
+            // Check if we hit any birds
+            const koshX = 350;
+            for (let i = birds.length - 1; i >= 0; i--) {
+                const bird = birds[i];
+                const distance = Math.abs(bird.x - koshX) + Math.abs(bird.y - 400);
+
+                if (distance < 80) {
+                    // HIT!
+                    caughtBirds++;
+                    sparkleBurst(vec2(bird.x, bird.y), 12);
+                    birds.splice(i, 1);
+                }
+            }
+
+            // Swipe effect
+            sparkleBurst(vec2(350 + rand(-30, 30), 400 + rand(-30, 30)), 8);
+        }
+    });
+
+    onAnyKeyPress('enter', () => {
+        if (phase === 'done') {
+            go('questComplete', { questName: 'Window Witch' });
+        } else {
+            // Skip to end
+            phase = 'done';
+        }
+    });
+
+    onAnyKeyPress('escape', () => {
+        go('questComplete', { questName: 'Window Witch' });
     });
 });
 
