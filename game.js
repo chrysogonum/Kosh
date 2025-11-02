@@ -1193,7 +1193,7 @@ scene('daWire', () => {
 // ===========================
 scene('inAndOut', () => {
     let trips = 0;
-    const maxTrips = 10;
+    const maxTrips = 6; // Reduced from 10
     const energyPerTrip = 10;
     let foodFound = false;
     let tripsSinceStart = 0;
@@ -1207,8 +1207,9 @@ scene('inAndOut', () => {
 
     // Food mechanics
     let foodAppeared = false;
-    const minTripsForFood = 3; // Minimum trips before food can appear
-    const foodChance = 0.20; // 20% chance each trip after minimum
+    const minTripsForFood = 2; // Minimum trips before food can appear (reduced from 3)
+    const foodChance = 0.35; // 35% chance each trip after minimum (increased from 20%)
+    const guaranteedFoodByTrip = 5; // Guaranteed food by trip 5
     const falsePositiveChance = 0.15; // 15% chance of thinking you see food
 
     onUpdate(() => {
@@ -1222,7 +1223,8 @@ scene('inAndOut', () => {
                     koshPosition = 'outside';
                     // Check if food appeared this trip
                     if (!foodAppeared && tripsSinceStart >= minTripsForFood) {
-                        if (rand() < foodChance) {
+                        // Guaranteed food by trip 5, otherwise use random chance
+                        if (tripsSinceStart >= guaranteedFoodByTrip || rand() < foodChance) {
                             foodAppeared = true;
                         }
                     }
@@ -1501,9 +1503,9 @@ scene('inAndOut', () => {
 // ===========================
 scene('witchInWardrobe', () => {
     let round = 1;
-    const maxRounds = 10;
+    const maxRounds = 5; // Reduced from 10
     let catchCount = 0;
-    const targetCatches = 7; // Need to catch 7/10
+    const targetCatches = 3; // Need to catch 3/5 (60% success rate)
 
     // Intro animation state
     let phase = 'approach'; // 'approach', 'opening', 'jumping', 'inside_waiting', 'inside_peeking'
@@ -1529,14 +1531,14 @@ scene('witchInWardrobe', () => {
     function startWait() {
         phase = 'inside_waiting';
         waitTimer = 0;
-        waitDuration = rand(0.8, 1.5);
+        waitDuration = rand(1.0, 2.0); // Increased from (0.8, 1.5) for more reaction time
     }
 
     function startPeek() {
         phase = 'inside_peeking';
         raccoonVisible = true;
         peekTimer = 0;
-        peekDuration = rand(0.6, 1.2);
+        peekDuration = rand(0.9, 1.6); // Increased from (0.6, 1.2) to stay visible longer
 
         // Random positions inside the wardrobe (on the walls/shelves)
         const peekPositions = [
